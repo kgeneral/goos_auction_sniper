@@ -18,7 +18,7 @@ public class ApplicationRunner {
 				try{
 					Main.main(XMPP_HOSTNAME, SNIPER_ID, SNIPER_PASSWORD, auction.getItemId());
 				} catch (Exception e) {
-					
+					e.printStackTrace();
 				}
 			}
 		};
