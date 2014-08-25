@@ -49,7 +49,7 @@ public class FakeAuctionServer {
 		return itemId;
 	}
 
-	public void hasReceivedJoinRequestFrom() throws InterruptedException {
+	public void hasReceivedJoinRequestFromSniper() throws InterruptedException {
 		messageListener.receivesAMessage();
 	}
 
