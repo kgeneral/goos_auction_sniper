@@ -1,11 +1,22 @@
 package test.endtoend.actionsniper;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManagerListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
 
 public class FakeAuctionServer {
+
+	private final SingleMessageListener messageListener = new SingleMessageListener();
 
 	public static final String ITEM_ID_AS_LOGIN = "auction-%s";
 	public static final String AUCTION_RESOURCE = "Auction";
@@ -34,23 +45,33 @@ public class FakeAuctionServer {
 		});
 	}
 
-	public Object getItemId() {
+	public String getItemId() {
 		return itemId;
 	}
 
-	public void hasReceivedJoinRequestFrom() {
-		// TODO Auto-generated method stub
-
+	public void hasReceivedJoinRequestFrom() throws InterruptedException {
+		messageListener.receivesAMessage();
 	}
 
-	public void announceClosed() {
-		// TODO Auto-generated method stub
-
+	public void announceClosed() throws XMPPException {
+		currentChat.sendMessage(new Message());
 	}
 
 	public void stop() {
-		// TODO Auto-generated method stub
-
+		connection.disconnect();
 	}
 
+	public class SingleMessageListener implements MessageListener {
+		private final ArrayBlockingQueue<Message> messages = new ArrayBlockingQueue<Message>(
+				1);
+
+		public void processMessage(Chat chat, Message message) {
+			messages.add(message);
+		}
+
+		public void receivesAMessage() throws InterruptedException {
+			assertThat("Message", messages.poll(5, TimeUnit.SECONDS),
+					is(notNullValue()));
+		}
+	}
 }
