@@ -32,27 +32,36 @@ public class Main {
 
 	private MainWindow ui;
 
+	@SuppressWarnings("unused")
+	private Chat notToBeGCd;
+
 	public Main() throws Exception {
 		startUserInterface();
 	}
 
 	public static void main(String... args) throws Exception {
 		Main main = new Main();
-		XMPPConnection connection = connectTo(args[ARG_HOSTNAME],
-				args[ARG_USERNAME], args[ARG_PASSWORD]);
 
-		Chat chat = connection.getChatManager().createChat(
-				auctionId(args[ARG_ITEM_ID], connection),
-				new MessageListener() {
+		main.joinAuction(
+				connection(args[ARG_HOSTNAME], args[ARG_USERNAME],
+						args[ARG_PASSWORD]), args[ARG_ITEM_ID]);
+	}
 
-					@Override
+	private void joinAuction(XMPPConnection connection, String itemId)
+			throws XMPPException {
+		final Chat chat = connection.getChatManager().createChat(
+				auctionId(itemId, connection), new MessageListener() {
 					public void processMessage(Chat aChat, Message message) {
-						// TODO Auto-generated method stub
-
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								ui.showStatus(MainWindow.STATUS_LOST);
+							}
+						});
 					}
 				});
-
+		this.notToBeGCd = chat;
 		chat.sendMessage(new Message());
+
 	}
 
 	private static String auctionId(String itemId, XMPPConnection connection) {
@@ -60,7 +69,7 @@ public class Main {
 				connection.getServiceName());
 	}
 
-	private static XMPPConnection connectTo(String hostname, String username,
+	private static XMPPConnection connection(String hostname, String username,
 			String password) throws XMPPException {
 		XMPPConnection connection = new XMPPConnection(hostname);
 		connection.connect();
@@ -79,6 +88,8 @@ public class Main {
 
 	public class MainWindow extends JFrame {
 
+		public static final String STATUS_LOST = "Lost";
+
 		private static final long serialVersionUID = -4274409492013695538L;
 
 		public static final String SNIPER_STATUS_NAME = "sniper status";
@@ -94,6 +105,10 @@ public class Main {
 			pack();
 			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			setVisible(true);
+		}
+
+		public void showStatus(String status) {
+			sniperStatus.setText(status);
 		}
 
 		private JLabel createLabel(String initialText) {
